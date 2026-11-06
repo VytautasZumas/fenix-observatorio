@@ -86,3 +86,13 @@ Os filtros de período, ativo e valor ficam recolhidos no botão Filtros, que mo
 - O explorador de transações fica sempre visível na coluna da direita. A alça vertical entre o gráfico e a coluna ajusta a largura (arraste, ou use as setas esquerda/direita com a alça em foco). A largura fica salva no navegador.
 - A aba Inspeção começa sempre fechada e só abre quando o usuário clica nela. A consulta de financiamento (primeiro TRX direto) fica recolhida dentro dela.
 - Ao clicar numa transação, no explorador ou no gráfico, os dados aparecem num painel horizontal abaixo do gráfico. A alça no topo do painel ajusta a altura (arraste para cima, ou use as setas). O × ou a tecla Esc fecham o painel.
+
+## Alertas pelo Telegram
+
+Em Configurações › Alertas pelo Telegram: crie um bot no @BotFather, cole o token, envie /start ao bot, use Descobrir chat ID, salve e envie um teste. A mensagem vai pelo seu bot direto do navegador (Bot API, `sendMessage`), sem custo e sem servidor próprio. Como o EmailJS, só envia com a página aberta.
+
+Conteúdo escolhido em Configurações: Mínimo (só o nome da regra), Resumo (padrão: regra, direção, valor, nome ou endereço abreviado do monitorado e data) ou Completo (inclui origem, destino, hash e link do TronScan). Mensagens de bot não têm criptografia ponta a ponta.
+
+Cada regra tem a opção Enviar pelo Telegram (ligada por padrão, também nas regras antigas) e o e-mail passou a ser opcional. Cada ocorrência mostra o estado do Telegram separado do e-mail; resultado incerto não é repetido sozinho e o reenvio manual pede confirmação. O token fica no IndexedDB deste navegador, não entra no backup exportado e um backup importado nunca traz token: a configuração do Telegram do navegador é mantida. Testes usam a Bot API simulada; o envio real precisa ser validado com Enviar teste.
+
+Próxima etapa prevista: um Cloudflare Worker gratuito para checar os endereços e avisar pelo mesmo bot com o site fechado.
