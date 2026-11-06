@@ -72,3 +72,11 @@ Teste de navegador desta função: `NODE_PATH=$(npm root -g) node tests/node-men
 Os avisos de coleta, como histórico em carregamento ou erro, têm um × para fechar. Um aviso fechado só volta quando o texto dele muda, por exemplo com um novo erro ou outro ativo pendente. Isso vale enquanto a página estiver aberta.
 
 O comentário de um nó aparece no gráfico como uma caixa ligada ao nó por uma linha tracejada. Arraste a caixa para posicioná-la, ou use as setas do teclado com a caixa focada. Ela guarda a distância até o nó e acompanha o nó quando ele é movido. Clique na caixa para inspecionar o nó. Duplo clique ou Enter edita o comentário. Salvar o comentário vazio remove a caixa. A posição fica em `commentPositions` e vai junto no backup.
+
+## Coluna da direita: inspeção e explorador
+
+O explorador fica na coluna da direita, abaixo da inspeção. Arraste o divisor entre os dois painéis para escolher quanto espaço o explorador ocupa. Os botões Ampliar e Recolher continuam funcionando. Com a inspeção recolhida, o explorador ocupa a coluna inteira.
+
+Ao clicar numa transação, seja na lista ou numa conexão do gráfico, a linha fica destacada e rola até ficar visível no explorador. Os dados da transação aparecem no painel "Transação selecionada", abaixo da lista: valor, origem, destino, hash, recibo e taxas, exibir no gráfico e explodir. O × fecha esse painel. A inspeção de cima continua mostrando os nós, os grupos e as setas customizadas.
+
+Os filtros de período, ativo e valor ficam recolhidos no botão Filtros, que mostra quantos estão ativos. Na tabela lateral, a coluna de hash fica oculta, mas o hash aparece nos dados da transação. Em telas estreitas, os painéis ficam empilhados abaixo do gráfico.
