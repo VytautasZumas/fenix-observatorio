@@ -80,3 +80,9 @@ O explorador fica na coluna da direita, abaixo da inspeção. Arraste o divisor 
 Ao clicar numa transação, seja na lista ou numa conexão do gráfico, a linha fica destacada e rola até ficar visível no explorador. Os dados da transação aparecem no painel "Transação selecionada", abaixo da lista: valor, origem, destino, hash, recibo e taxas, exibir no gráfico e explodir. O × fecha esse painel. A inspeção de cima continua mostrando os nós, os grupos e as setas customizadas.
 
 Os filtros de período, ativo e valor ficam recolhidos no botão Filtros, que mostra quantos estão ativos. Na tabela lateral, a coluna de hash fica oculta, mas o hash aparece nos dados da transação. Em telas estreitas, os painéis ficam empilhados abaixo do gráfico.
+
+## Layout: explorador à direita e transação abaixo do gráfico
+
+- O explorador de transações fica sempre visível na coluna da direita. A alça vertical entre o gráfico e a coluna ajusta a largura (arraste, ou use as setas esquerda/direita com a alça em foco). A largura fica salva no navegador.
+- A aba Inspeção começa sempre fechada e só abre quando o usuário clica nela. A consulta de financiamento (primeiro TRX direto) fica recolhida dentro dela.
+- Ao clicar numa transação, no explorador ou no gráfico, os dados aparecem num painel horizontal abaixo do gráfico. A alça no topo do painel ajusta a altura (arraste para cima, ou use as setas). O × ou a tecla Esc fecham o painel.
