@@ -163,5 +163,10 @@ async function run(code){return vm.runInContext(code,context);}
  console.log('PASS: explorer dates/direction/asset/exact values, polygon selection, full-page return, group drag, mocked email detection dispatch/deduplication, no historical email, quota and uncertain delivery.');
  console.log('PASS: per-asset totals, optional date range, latest connection transaction, movement switcher, reverse-direction isolation, date-toggle preference.');
  console.log('PASS: graph lanes, bidirectional counterpart roles, actual edge directions, stable positions, saved positions, drag at zoom with SVG coordinate conversion.');
+ // Imported annotations are sanitised: unknown colours/shapes, bad addresses, self arrows and over-long text are dropped or trimmed.
+ const T='TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',U='TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7';context.junk={events:{e1:{}},graphHidden:{[T]:{events:['e1','missing']},bad:{events:[]}},nodeStyles:{[T]:{color:'#e5534b',shape:'diamond'},[U]:{color:'red',shape:'star'}},nodeComments:{[T]:'x'.repeat(900),[U]:'  '},customArrows:[{id:'a',from:T,to:U,label:'l'},{id:'b',from:T,to:T},{id:'c',from:'x',to:U}]};
+ const clean=await run('sanitizeGraphAnnotations(junk)');
+ assert.deepEqual(Object.keys(clean.graphHidden),[T]);assert.deepEqual([...clean.graphHidden[T].events],['e1']);assert.deepEqual(Object.keys(clean.nodeStyles),[T]);assert.equal(clean.nodeComments[T].length,500);assert.equal(clean.nodeComments[U],undefined);assert.deepEqual(clean.customArrows.map(a=>a.id),['a']);
+ console.log('PASS: imported node annotations (hidden nodes, colours, shapes, comments, custom arrows) are sanitised.');
  console.log('PASS: checksum, Base58, fuso, valores exatos, log USDT real, deduplicação de alertas, direção, falhas, janela noturna, HTTP 429.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

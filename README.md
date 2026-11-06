@@ -49,3 +49,20 @@ A marca foi atualizada para Fenix Observatório, inclusive nos e-mails e nomes d
 Verificação do layout: HTML com estrutura e IDs verificados, testes funcionais em tests/core.cjs. tests/browser.cjs usa dados sintéticos e intercepta as solicitações externas; a execução de Chromium neste ambiente foi impedida por restrições de sockets. Revisão visual real permanece pendente.
 
 Projeto independente: Fenix Observatório. Para trazer dados do domínio anterior, exporte o caso no antigo Observatório e importe em Configurações neste domínio. O navegador isola o armazenamento entre os dois sites.
+
+## Menu do nó e exclusão pelo teclado
+
+Com um nó marcado (clique, Shift + clique ou Shift + arraste), Delete ou Backspace remove-o do gráfico. A remoção desmarca as transações que desenham o nó, e elas continuam coletadas no explorador. O botão Restaurar nós devolve os nós removidos com suas transações, e marcar de novo uma transação no explorador também traz o nó de volta. Monitorados continuam sendo coletados mesmo fora do gráfico. As teclas não agem enquanto há digitação em campos ou diálogos abertos.
+
+O botão direito sobre um nó (ou Shift+F10 / tecla Menu com o nó focado) abre o menu com estas opções:
+- Excluir do gráfico.
+- Trocar cor: 9 cores, mais a cor padrão.
+- Trocar forma: círculo, quadrado, losango, hexágono ou triângulo.
+- Renomear: o mesmo nome de referência do inspetor.
+- Inserir comentário: até 500 caracteres. O nó ganha um selo e o texto aparece na inspeção.
+- Inserir seta customizada: clique no nó de destino e informe um rótulo opcional. Esc cancela.
+- Monitorar: abre o cadastro já preenchido. Uma expansão passa a ser monitorada e o histórico é recoletado desde a data informada, sem alertas retroativos.
+
+Excluir, cor e forma valem para toda a seleção quando o nó clicado faz parte dela. As setas customizadas são tracejadas em roxo, abrem na inspeção ao clicar e podem ser excluídas pelo menu ou com Delete. Elas são anotações do analista e não transações. Cores, formas, comentários, setas e nós ocultos ficam em `nodeStyles`, `nodeComments`, `customArrows` e `graphHidden`, acompanham o backup e são saneados na importação.
+
+Teste de navegador desta função: `NODE_PATH=$(npm root -g) node tests/node-menu.cjs`.
