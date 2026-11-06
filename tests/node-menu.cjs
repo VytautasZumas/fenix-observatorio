@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const fs=require('node:fs');const path=re
 const receipt=JSON.parse(fs.readFileSync('tests/fixtures/usdt-receipt.json','utf8'));
 const center='TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7',a='TCEEJKaAT4mF3AsjqwUUHmHvosq67x3FTz',b='TTEP3e6KJVLAeQ2w4eXsCaruCEN9VRBdFN',c='TDqSquXBgUCLYvYC4XZgrprLK589dkhSCf';
 const events=[{from:a,to:center,value:'12500000000',asset:'USDT'},{from:b,to:center,value:'850000000',asset:'TRX'},{from:center,to:c,value:'3200000000',asset:'USDT'}].map((e,i)=>({...e,id:receipt.id+':log:'+i,hash:receipt.id,index:i,time:receipt.blockTimeStamp+i*1000,block:receipt.blockNumber}));
-const fixture={version:1,auto:false,timezone:'America/Sao_Paulo',addresses:[{address:center,label:'Carteira monitorada',start:receipt.blockTimeStamp-1000,expanded:false,streams:{trx:{initial:false,since:Date.now()},usdt:{initial:false,since:Date.now()}}}],events:Object.fromEntries(events.map(e=>[e.id,e])),rules:[],alerts:[],raw:[],receipts:{[receipt.id]:receipt},nodeLabels:{[a]:'Origem A',[b]:'Origem B',[c]:'Destino A'},last:Date.now()};
+const fixture={version:1,auto:false,timezone:'America/Sao_Paulo',addresses:[{address:center,label:'Carteira monitorada',start:receipt.blockTimeStamp-1000,expanded:false,error:'TRX: teste de aviso',streams:{trx:{initial:false,since:Date.now()},usdt:{initial:false,since:Date.now()}}}],events:Object.fromEntries(events.map(e=>[e.id,e])),rules:[],alerts:[],raw:[],receipts:{[receipt.id]:receipt},nodeLabels:{[a]:'Origem A',[b]:'Origem B',[c]:'Destino A'},last:Date.now()};
 (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});try{
  const page=await browser.newPage({viewport:{width:1560,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.hostname!=='localhost')return route.abort();const name=url.pathname==='/'?'index.html':url.pathname.slice(1);if(!['index.html','app.js','style.css'].includes(name))return route.fulfill({status:404,body:''});return route.fulfill({status:200,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html',body:fs.readFileSync(path.join('dist',name))});});
@@ -32,7 +32,12 @@ const fixture={version:1,auto:false,timezone:'America/Sao_Paulo',addresses:[{add
  await node(c).click({button:'right'});await page.locator('[data-menu=rename]').click();assert.equal(await page.locator('#nodeTextDialog').isVisible(),true);await page.locator('#nodeTextInput').fill('Destino renomeado');await page.locator('#nodeTextForm button.primary').click();await settle();
  assert.match(await node(c).textContent(),/Destino renomeado/);
  await node(c).click({button:'right'});await page.locator('[data-menu=comment]').click();await page.locator('#nodeTextArea').fill('Recebeu após o ataque');await page.locator('#nodeTextForm button.primary').click();await settle();
- assert.equal(await node(c).locator('.node-comment-badge').count(),1);assert.match(await page.locator('#detail').textContent(),/Recebeu após o ataque/);
+ assert.equal(await page.locator(`[data-note="${c}"]`).count(),1);assert.match(await page.locator('#detail').textContent(),/Recebeu após o ataque/);
+ // The comment note is draggable on its own and keeps its offset when the node moves.
+ const noteBox=async()=>page.locator(`[data-note="${c}"] rect`).boundingBox();let nb=await noteBox();await page.mouse.move(nb.x+20,nb.y+10);await page.mouse.down();await page.mouse.move(nb.x-40,nb.y+70,{steps:6});await page.mouse.up();await settle();const moved=await noteBox();assert.ok(Math.abs(moved.x-nb.x+60)<3&&Math.abs(moved.y-nb.y-60)<3,'note follows the pointer');
+ s=await stored();assert.ok(Number.isFinite(s.commentPositions[c].dx));const nodeBox=await node(c).boundingBox();await page.mouse.move(nodeBox.x+nodeBox.width/2,nodeBox.y+12);await page.mouse.down();await page.mouse.move(nodeBox.x+nodeBox.width/2-40,nodeBox.y+12,{steps:5});await page.mouse.up();await settle();const after=await noteBox();assert.ok(Math.abs(after.x-moved.x+40)<3,'note moves with its node');
+ // Status notices close with ×.
+ assert.equal(await page.locator('#coverage .coverage').count(),1);await page.locator('[data-close-coverage]').click();assert.equal(await page.locator('#coverage .coverage').count(),0);
  // Escape closes the menu without clearing other state.
  await node(c).click({button:'right'});await page.keyboard.press('Escape');assert.equal(await page.locator('#nodeMenu').isVisible(),false);
  // Custom arrow from C to A, labelled, then removed with Delete.
@@ -44,7 +49,7 @@ const fixture={version:1,auto:false,timezone:'America/Sao_Paulo',addresses:[{add
  await node(center).click({button:'right'});assert.equal(await page.locator('[data-menu=monitor]').isDisabled(),true);await page.keyboard.press('Escape');
  await node(c).click({button:'right'});await page.locator('[data-menu=monitor]').click();assert.equal(await page.locator('#addressDialog').isVisible(),true);assert.equal(await page.locator('#addressForm [name=address]').inputValue(),c);assert.equal(await page.locator('#addressForm [name=label]').inputValue(),'Destino renomeado');await page.locator('#cancelAddress').click();
  // Annotations survive a reload.
- await page.reload();await page.waitForSelector('[data-node]');assert.equal(await node(c).locator('polygon').count(),1);assert.equal(await node(c).locator('.node-comment-badge').count(),1);
+ await page.reload();await page.waitForSelector('[data-node]');assert.equal(await node(c).locator('polygon').count(),1);assert.equal(await page.locator(`[data-note="${c}"]`).count(),1);
  await page.screenshot({path:'/tmp/fenix-node-menu.png'});
- assert.deepEqual(errors,[]);console.log('PASS: Delete/Backspace remove nodes (single and group) and restore, typing guard, right-click menu colour/shape/rename/comment/custom arrow/monitor, Escape, persistence after reload.');
+ assert.deepEqual(errors,[]);console.log('PASS: Delete/Backspace remove nodes (single and group) and restore, typing guard, right-click menu colour/shape/rename/comment/custom arrow/monitor, comment note drag and follow, closable status notices, Escape, persistence after reload.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

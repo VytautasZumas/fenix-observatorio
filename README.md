@@ -66,3 +66,9 @@ O botão direito sobre um nó (ou Shift+F10 / tecla Menu com o nó focado) abre 
 Excluir, cor e forma valem para toda a seleção quando o nó clicado faz parte dela. As setas customizadas são tracejadas em roxo, abrem na inspeção ao clicar e podem ser excluídas pelo menu ou com Delete. Elas são anotações do analista e não transações. Cores, formas, comentários, setas e nós ocultos ficam em `nodeStyles`, `nodeComments`, `customArrows` e `graphHidden`, acompanham o backup e são saneados na importação.
 
 Teste de navegador desta função: `NODE_PATH=$(npm root -g) node tests/node-menu.cjs`.
+
+## Avisos fecháveis e comentários no gráfico
+
+Os avisos de coleta, como histórico em carregamento ou erro, têm um × para fechar. Um aviso fechado só volta quando o texto dele muda, por exemplo com um novo erro ou outro ativo pendente. Isso vale enquanto a página estiver aberta.
+
+O comentário de um nó aparece no gráfico como uma caixa ligada ao nó por uma linha tracejada. Arraste a caixa para posicioná-la, ou use as setas do teclado com a caixa focada. Ela guarda a distância até o nó e acompanha o nó quando ele é movido. Clique na caixa para inspecionar o nó. Duplo clique ou Enter edita o comentário. Salvar o comentário vazio remove a caixa. A posição fica em `commentPositions` e vai junto no backup.
