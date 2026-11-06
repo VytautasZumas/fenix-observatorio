@@ -18,6 +18,15 @@ async function run(code){return vm.runInContext(code,context);}
  await run("state.alerts=[];state.rules[0].direction='out';evaluate(transfer)");assert.equal(await run('state.alerts.length'),0);
  const failed=await run("normalize([{txID:'a',ret:[{contractRet:'REVERT'}],raw_data:{contract:[{type:'TransferContract'}]}}],'trx','x')");assert.equal(failed.length,0);
  await run("state.alerts=[];state.rules[0].direction='in';state.rules[0].from='22:00';state.rules[0].to='06:00';evaluate({...transfer,time:Date.parse('2026-11-01T02:00:00Z')});");assert.equal(await run('state.alerts.length'),1);
+ // Rules tied to one address: direction comes from that address, other monitored addresses do not trigger them.
+ context.other='TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
+ await run("state.addresses=[{address:transfer.to,expanded:false},{address:other,expanded:false}];state.alerts=[];state.rules=[{id:'a1',name:'Só o destino',address:transfer.to,asset:'USDT',min:'1',direction:'in',days:'all',enabled:true},{id:'a2',name:'Só o outro',address:other,asset:'USDT',min:'1',direction:'',days:'all',enabled:true}];evaluate(transfer)");
+ assert.equal(await run("state.alerts.map(a=>a.rule).join('|')"),'Só o destino');assert.equal(await run("state.alerts[0].address"),context.transfer.to);
+ await run("state.alerts=[];state.rules[0].direction='out';evaluate(transfer)");assert.equal(await run('state.alerts.length'),0);
+ await run("state.alerts=[];state.rules=[{id:'a3',name:'Remetente',address:transfer.from,asset:'USDT',min:'1',direction:'out',days:'all',enabled:true}];evaluate(transfer)");assert.equal(await run('state.alerts.length'),0);
+ await run("state.addresses.push({address:transfer.from,expanded:false});evaluate(transfer)");assert.equal(await run('state.alerts.length'),1);assert.match(await run("telegramMessage(state.alerts[0])"),/Saída: /);
+ await run("state.addresses=[{address:transfer.to,expanded:false}];state.alerts=[];state.rules=[{id:'r',name:'Entrada',asset:'USDT',min:'1',direction:'in',days:'all',enabled:true}]");
+ await assert.rejects(()=>run("Promise.resolve().then(()=>validateImport({version:1,addresses:[],events:{},rules:[{id:'00000000-0000-0000-0000-000000000000',name:'r',min:'1',asset:'USDT',direction:'',days:'all',address:'xyz'}],raw:[],alerts:[],timezone:'UTC'}))"),/Endereço inválido/);
  context.fetch=async()=>({ok:false,status:429});await assert.rejects(()=>run("api('/v1/test')"),/429/);
  // A counterparty may occupy both roles while retaining its actual address.
  context.graphEvents=[{from:'IN',to:'M',asset:'TRX'},{from:'M',to:'OUT',asset:'USDT'},{from:'BOTH',to:'M',asset:'USDT'},{from:'M',to:'BOTH',asset:'USDT'},{from:'OUT',to:'NEXT',asset:'TRX'}];
@@ -182,5 +191,5 @@ async function run(code){return vm.runInContext(code,context);}
  const clean=await run('sanitizeGraphAnnotations(junk)');
  assert.deepEqual(Object.keys(clean.graphHidden),[T]);assert.deepEqual([...clean.graphHidden[T].events],['e1']);assert.deepEqual(Object.keys(clean.nodeStyles),[T]);assert.equal(clean.nodeComments[T].length,500);assert.equal(clean.nodeComments[U],undefined);assert.deepEqual(clean.customArrows.map(a=>a.id),['a']);
  console.log('PASS: imported node annotations (hidden nodes, colours, shapes, comments, custom arrows) are sanitised.');
- console.log('PASS: checksum, Base58, fuso, valores exatos, log USDT real, deduplicação de alertas, direção, falhas, janela noturna, HTTP 429.');
+ console.log('PASS: checksum, Base58, fuso, valores exatos, log USDT real, deduplicação de alertas, direção, falhas, janela noturna, alertas por endereço, HTTP 429.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -25,7 +25,7 @@ const fixture={version:1,auto:false,timezone:'America/Sao_Paulo',addresses:[{add
  await node(c).click();if(await page.locator('#inspectorToggle').getAttribute('aria-expanded')!=='true')await page.locator('#inspectorToggle').click();await page.locator('#nodeLabelInput').focus();await page.keyboard.press('Backspace');assert.equal(await page.locator(`[data-node="${c}"]`).count(),1);
  // Right-click menu: colour, shape, rename, comment.
  await node(c).click({button:'right'});assert.equal(await page.locator('#nodeMenu').isVisible(),true);
- assert.deepEqual(await page.locator('#nodeMenu > button').allTextContents().then(t=>t.map(x=>x.replace(/Del$/,'').trim())),['🗑 Excluir do gráfico','✎ Renomear','💬 Inserir comentário','➝ Inserir seta customizada','◎ Monitorar']);
+ assert.deepEqual(await page.locator('#nodeMenu > button').allTextContents().then(t=>t.map(x=>x.replace(/Del$/,'').trim())),['🗑 Excluir do gráfico','✎ Renomear','💬 Inserir comentário','➝ Inserir seta customizada','◎ Monitorar','🔔 Ajustar alerta']);
  await page.locator('[data-menu-color="#e5534b"]').click();assert.equal(await page.locator('#nodeMenu').isVisible(),false);
  assert.equal(await node(c).locator('circle[stroke="#42d7e7"],circle[fill="#e5534b"]').count()>0,true);
  await node(c).click({button:'right'});await page.locator('[data-menu-shape="diamond"]').click();await settle();assert.equal(await node(c).locator('polygon').count(),1);
@@ -48,8 +48,16 @@ const fixture={version:1,auto:false,timezone:'America/Sao_Paulo',addresses:[{add
  // Monitorar opens the address dialog prefilled; already monitored is disabled.
  await node(center).click({button:'right'});assert.equal(await page.locator('[data-menu=monitor]').isDisabled(),true);await page.keyboard.press('Escape');
  await node(c).click({button:'right'});await page.locator('[data-menu=monitor]').click();assert.equal(await page.locator('#addressDialog').isVisible(),true);assert.equal(await page.locator('#addressForm [name=address]').inputValue(),c);assert.equal(await page.locator('#addressForm [name=label]').inputValue(),'Destino renomeado');await page.locator('#cancelAddress').click();
+ // Ajustar alerta: only for monitored addresses; opens the rule dialog tied to that address and lists its alerts.
+ await node(c).click({button:'right'});assert.equal(await page.locator('[data-menu=alert]').isDisabled(),true);await page.keyboard.press('Escape');
+ await node(center).click({button:'right'});await page.locator('[data-menu=alert]').click();assert.equal(await page.locator('#ruleDialog').isVisible(),true);assert.equal(await page.locator('#ruleAddress').inputValue(),center);assert.equal(await page.locator('#ruleExisting').isHidden(),true);
+ await page.locator('#ruleForm [name=name]').fill('Saída do alvo');await page.locator('#ruleForm [name=min]').fill('100');await page.locator('#ruleForm button.primary').click();await settle();
+ s=await stored();assert.equal(s.rules.length,1);assert.equal(s.rules[0].address,center);assert.equal(s.rules[0].telegram,true);
+ await node(center).click({button:'right'});assert.match(await page.locator('[data-menu=alert]').textContent(),/Ajustar alerta \(1\)/);await page.locator('[data-menu=alert]').click();assert.match(await page.locator('#ruleExisting').textContent(),/Saída do alvo/);
+ await page.locator('[data-edit-existing]').click();assert.equal(await page.locator('#ruleForm [name=name]').inputValue(),'Saída do alvo');assert.equal(await page.locator('#ruleEyebrow').textContent(),'EDITAR ALERTA');await page.locator('#ruleForm [name=min]').fill('250');await page.locator('#ruleForm button.primary').click();await settle();
+ s=await stored();assert.equal(s.rules.length,1);assert.equal(s.rules[0].min,'250');
  // Annotations survive a reload.
  await page.reload();await page.waitForSelector('[data-node]');assert.equal(await node(c).locator('polygon').count(),1);assert.equal(await page.locator(`[data-note="${c}"]`).count(),1);
  await page.screenshot({path:'/tmp/fenix-node-menu.png'});
- assert.deepEqual(errors,[]);console.log('PASS: Delete/Backspace remove nodes (single and group) and restore, typing guard, right-click menu colour/shape/rename/comment/custom arrow/monitor, comment note drag and follow, closable status notices, Escape, persistence after reload.');
+ assert.deepEqual(errors,[]);console.log('PASS: Delete/Backspace remove nodes (single and group) and restore, typing guard, right-click menu colour/shape/rename/comment/custom arrow/monitor, Ajustar alerta per address, comment note drag and follow, closable status notices, Escape, persistence after reload.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});
