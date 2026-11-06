@@ -15,3 +15,5 @@ dialog{border:1px solid #355464;background:#12232e;color:#d5e7ef;border-radius:1
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
 .address-empty{padding:18px 9px;font-size:10px;color:#597f94;line-height:1.8}.drawer-title{font-family:Manrope,sans-serif;font-weight:700}.connection-navigation #openConnectionExplorer{display:block;width:100%;margin:0 0 12px;font-size:10px;border-color:#36725a;color:#9ce5c5;background:#174235}
+
+.graph-check{width:26px;text-align:center}.graph-check input{width:14px;height:14px;margin:0;accent-color:#42d7e7;cursor:pointer}#rows tr:not(.on-graph) td:not(.graph-check){opacity:.62}.row-explode{padding:2px 8px;font-size:11px;line-height:1.2}.muted-cell{color:#527b91}.graph-count{color:#84b5be;font-size:10px;white-space:nowrap}.event-graph-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 10px}.event-graph-tools label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.event-graph-tools input{accent-color:#42d7e7}.edge.selected{filter:drop-shadow(0 0 3px #42d7e766)}
