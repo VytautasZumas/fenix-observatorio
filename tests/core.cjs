@@ -40,14 +40,19 @@ async function run(code){return vm.runInContext(code,context);}
  assert.equal(await run("positions.get('0:M').x"),787);
  assert.equal(await run("positions.get('0:M').y"),338);
  await run("drag=null");
- // Aggregated labels retain exact per-asset totals and real transaction selection.
- await run("save=async()=>{};state.events={};state.addresses=[{address:transfer.to,expanded:false}];const examples=[transfer,{...transfer,id:transfer.hash+':log:1',time:transfer.time+1000,value:'2500000'},{...transfer,id:transfer.hash+':trx:0',time:transfer.time+2000,value:'1500000',asset:'TRX'},{...transfer,id:transfer.hash+':log:2',from:transfer.to,to:transfer.from,time:transfer.time+3000,value:'9000000'}];for(const e of examples)state.events[e.id]=e;scene=buildGraphScene(examples,state.addresses);positions.clear();placeGraphNodes(scene.nodes)");
- assert.equal(await run("scene.edges.find(e=>e.n===3).totals.USDT.toString()"),'3500000');
- assert.equal(await run("scene.edges.find(e=>e.n===3).totals.TRX.toString()"),'1500000');
- assert.equal(await run("connectionLabelLines(scene.edges.find(e=>e.n===3),false).join('|').includes('3,50 USDT')"),true);
- assert.equal(await run("connectionLabelLines(scene.edges.find(e=>e.n===3),false).length"),3);
- assert.equal(await run("connectionLabelLines(scene.edges.find(e=>e.n===3),true).length"),5);
- await run("showConnection(scene.edges.find(e=>e.n===3).id)");
+ // One arrow per marked transaction: several between the same pair fan out as arcs; a single one is straight.
+ await run("save=async()=>{};state.events={};state.graphSelected={};state.addresses=[{address:transfer.to,expanded:false}];const examples=[transfer,{...transfer,id:transfer.hash+':log:1',time:transfer.time+1000,value:'2500000'},{...transfer,id:transfer.hash+':trx:0',time:transfer.time+2000,value:'1500000',asset:'TRX'},{...transfer,id:transfer.hash+':log:2',from:transfer.to,to:transfer.from,time:transfer.time+3000,value:'9000000'}];for(const e of examples)state.events[e.id]=e;positions.clear();renderGraph()");
+ assert.equal(await run("scene.edges.length"),0);assert.equal(elements.get('#graph').innerHTML.includes('marque no explorador'),true);
+ await run("setOnGraph([transfer.id],true)");
+ assert.equal(await run("scene.edges.length"),1);assert.equal(await run("graphEdgePath(scene.edges[0]).path.split(' ').filter((v,i,a)=>i>0&&a[i-1]==='Q').length"),1);
+ assert.equal(await run("(()=>{const [,x1,y1,,cx,cy,x2,y2]=graphEdgePath(scene.edges[0]).path.split(' ').map(Number);return Math.abs((cy-y1)*(x2-x1)-(cx-x1)*(y2-y1))<1e-6;})()"),true);
+ await run("setOnGraph(Object.keys(state.events),true)");
+ assert.equal(await run("scene.edges.length"),4);assert.equal(await run("scene.edges.filter(e=>e.groupSize===3).length"),3);assert.equal(await run("scene.edges.find(e=>e.id===transfer.hash+':log:2').groupSize"),1);
+ assert.equal(await run("new Set(scene.edges.filter(e=>e.groupSize===3).map(e=>Math.round(graphEdgePath(e).y))).size"),3);
+ assert.equal(await run("scene.edges.find(e=>e.id===transfer.hash+':trx:0').totals.TRX.toString()"),'1500000');
+ assert.equal(await run("connectionLabelLines(scene.edges.find(e=>e.id===transfer.hash+':log:1'),false).join('|')"),'2,50 USDT');
+ assert.equal(await run("connectionLabelLines(scene.edges[0],true).length"),2);
+ await run("showConnection(transfer.hash+':trx:0')");
  assert.equal(await run("selection.value"),events[0].hash+':trx:0');
  assert.equal(await run("visibleEvents().length"),3);
  assert.equal(elements.get('#detail').innerHTML.includes('1,50 TRX'),true);
@@ -56,10 +61,34 @@ async function run(code){return vm.runInContext(code,context);}
  assert.equal(await run("selection.value"),events[0].id);
  assert.equal(elements.get('#detail').innerHTML.includes('1,00 USDT'),true);
  assert.equal(await run("visibleEvents().some(e=>e.id===transfer.hash+':log:2')"),false);
+ await run("selection=null;setOnGraph([transfer.hash+':log:1',transfer.hash+':trx:0',transfer.hash+':log:2'],false)");
+ assert.equal(await run("scene.edges.length"),1);assert.equal(await run("scene.edges[0].groupSize"),1);
+ assert.equal(await run("(()=>{const [,x1,y1,,cx,cy,x2,y2]=graphEdgePath(scene.edges[0]).path.split(' ').map(Number);return Math.abs((cy-y1)*(x2-x1)-(cx-x1)*(y2-y1))<1e-6;})()"),true);
+ {
+  await run("$('#graphFilter').value='on'");assert.equal(await run("visibleEvents().length"),1);
+  await run("$('#graphFilter').value='off'");assert.equal(await run("visibleEvents().length"),3);
+  await run("$('#graphFilter').value=''");assert.equal(await run("visibleEvents().length"),4);
+ }
+ assert.deepEqual(Object.keys(await run("migrateGraphSelection({events:{a:{},b:{}}}).graphSelected")),['a','b']);
+ assert.deepEqual(Object.keys(await run("migrateGraphSelection({events:{a:{}},graphSelected:{a:true,gone:true}}).graphSelected")),['a']);
+ await run("setOnGraph(Object.keys(state.events),true)");
  await run("state.graphDates=false;$('#graphDates').onclick()");
  assert.equal(await run("state.graphDates"),true);
  assert.equal(elements.get('#graphDates').textContent,'Ocultar data e hora');
  await run("$('#graphDates').onclick()");assert.equal(await run("state.graphDates"),false);
+ // Exploding from a chosen outflow monitors the counterparty from that transaction onwards.
+ context.outflow={...context.transfer,id:'f'.repeat(64)+':log:0',hash:'f'.repeat(64),from:context.transfer.to,to:"TDqSquXBgUCLYvYC4XZgrprLK589dkhSCf",time:context.transfer.time+5000};
+ await run("state.events[outflow.id]=outflow;sync=async()=>{};busy=false");
+ assert.equal(await run("explosionTarget(outflow).address"),'TDqSquXBgUCLYvYC4XZgrprLK589dkhSCf');
+ assert.equal(await run("explosionTarget(outflow).start"),context.outflow.time);
+ assert.equal(await run("explosionTarget(state.events[transfer.id]).forward"),false);
+ assert.equal(await run("explodeEvents([outflow.id])"),true);
+ assert.equal(await run("state.addresses.find(a=>a.address===outflow.to).expanded"),true);
+ assert.equal(await run("state.addresses.find(a=>a.address===outflow.to).start"),context.outflow.time);
+ assert.equal(await run("onGraph(outflow.id)"),true);assert.equal(await run("explosionTarget(outflow)"),null);
+ assert.equal(await run("explodeEvents([outflow.id])"),false);
+ await run("state.addresses=state.addresses.filter(a=>!a.expanded);delete state.events[outflow.id];migrateGraphSelection(state)");
+ console.log('PASS: graph shows only marked transactions, one arrow per transaction, fanned arcs for repeated pairs, straight single arrow, explorer graph filter, migration of older cases, explosion from chosen transactions.');
  // Exact values and inclusive date boundaries for explorer filters.
  await run("selection=null;$('#dateFrom').value='2026-11-01T09:00';$('#dateTo').value='2026-11-01T10:00';$('#explorerAsset').value='USDT';$('#direction').value='in';$('#valueOp').value='gt';$('#valueFilter').value='1,000001';$('#search').value='';state.addresses=[{address:transfer.to,expanded:false}]");
  context.filterEvent={...events[0],time:Date.parse('2026-11-01T12:30:00Z'),value:'1000002'};
@@ -91,7 +120,7 @@ async function run(code){return vm.runInContext(code,context);}
  // Rectangle ignores intermediate mouse points even after a curved gesture.
  const rectangle=await run("selectionRectangle([{x:1,y:2},{x:99,y:90},{x:5,y:6}])");assert.equal(JSON.stringify(rectangle),JSON.stringify([{x:1,y:2},{x:5,y:2},{x:5,y:6},{x:1,y:6}]));
  const reverseRectangle=await run("selectionRectangle([{x:10,y:20},{x:-10,y:-20}])");assert.equal(await run("pointInPolygon({x:0,y:0},selectionRectangle([{x:10,y:20},{x:-10,y:-20}]))"),true);
- await run("state.addresses=[{address:'M',expanded:false}];state.events=Object.fromEntries(['A','B','C'].map((from,i)=>[String(i),{id:String(i),from,to:'M',hash:'0'.repeat(64),asset:'USDT',value:'1000000',time:Date.now()}]));renderGraph();selectedNodes=new Set(['-1:A','-1:B','-1:C'])");
+ await run("state.addresses=[{address:'M',expanded:false}];state.events=Object.fromEntries(['A','B','C'].map((from,i)=>[String(i),{id:String(i),from,to:'M',hash:'0'.repeat(64),asset:'USDT',value:'1000000',time:Date.now()}]));migrateGraphSelection({events:{}});state.graphSelected={'0':true,'1':true,'2':true};renderGraph();selectedNodes=new Set(['-1:A','-1:B','-1:C'])");
  async function resetAlignment(){await run("positions.set('-1:A',{x:10,y:10});positions.set('-1:B',{x:30,y:30});positions.set('-1:C',{x:110,y:110});positions.set('0:M',{x:500,y:100});");}
  await resetAlignment();await run("alignSelectedNodes('horizontal')");assert.equal(await run("positions.get('-1:A').y"),50);assert.equal(await run("positions.get('-1:B').x"),30);assert.equal(await run("positions.get('0:M').y"),100);assert.equal(await run("state.graphPositions['-1:C'].y"),50);
  await resetAlignment();await run("alignSelectedNodes('vertical')");assert.equal(await run("positions.get('-1:A').x"),50);assert.equal(await run("positions.get('-1:B').y"),30);
@@ -104,7 +133,7 @@ async function run(code){return vm.runInContext(code,context);}
  await run("state.addresses=[{address:transfer.to,expanded:false}];selectedNodes.clear();selection=null");
  console.log('PASS: rectangular selection in both drag directions, four alignment commands, uniform spacing, preserved extremes, untouched unselected node, saved positions, shortcuts and typing guards.');
  // Naming a counterparty must not expand or monitor it.
- await run("state.events={[transfer.id]:transfer};state.addresses=[{address:transfer.to,label:'Nome antigo',start:transfer.time-1000,expanded:false}];state.nodeLabels={};save=async()=>{globalThis.savedCase=structuredClone(state);};setNodeLabel(transfer.from,'  Contraparte nomeada  ')");
+ await run("state.events={[transfer.id]:transfer};state.graphSelected={[transfer.id]:true};state.addresses=[{address:transfer.to,label:'Nome antigo',start:transfer.time-1000,expanded:false}];state.nodeLabels={};save=async()=>{globalThis.savedCase=structuredClone(state);};setNodeLabel(transfer.from,'  Contraparte nomeada  ')");
  assert.equal(await run('state.addresses.length'),1);assert.equal(await run('nodeLabel(transfer.from)'),'Contraparte nomeada');assert.equal(await run('savedCase.nodeLabels[transfer.from]'),'Contraparte nomeada');
  await run("showNode(transfer.from)");assert.equal(elements.get('#detail').innerHTML.includes('nodeLabelForm'),true);assert.equal(elements.get('#graph').innerHTML.includes('Contraparte nomeada'),true);
  await run("setNodeLabel(transfer.to,'Nome atualizado')");assert.equal(await run('state.addresses[0].label'),'Nome atualizado');
