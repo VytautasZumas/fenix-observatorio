@@ -85,7 +85,7 @@ Os filtros de período, ativo e valor ficam recolhidos no botão Filtros, que mo
 
 ## Alertas pelo Telegram
 
-Em Configurações › Alertas pelo Telegram: crie um bot no @BotFather, cole o token, envie /start ao bot, use Descobrir chat ID, salve e envie um teste. A mensagem vai pelo seu bot direto do navegador (Bot API, `sendMessage`), sem custo e sem servidor próprio. Como o EmailJS, só envia com a página aberta.
+Em Configurações › Alertas pelo Telegram: crie um bot no @BotFather, cole o token, envie /start ao bot, use Descobrir chat ID, salve e envie um teste. A mensagem vai pelo seu bot direto do navegador (Bot API, `sendMessage`), sem custo e sem servidor próprio. Só envia com a página aberta.
 
 Conteúdo escolhido em Configurações: Mínimo (só o nome da regra), Resumo (padrão: regra, direção, valor, nome ou endereço abreviado do monitorado e data) ou Completo (inclui origem, destino, hash e link do TronScan). Mensagens de bot não têm criptografia ponta a ponta.
 
