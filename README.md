@@ -94,3 +94,9 @@ Cada regra tem a opção Enviar pelo Telegram (ligada por padrão, também nas r
 O EmailJS foi removido. Casos e backups de versões anteriores continuam abrindo: a configuração do EmailJS, os e-mails das regras e os estados de envio por e-mail são descartados ao carregar.
 
 Próxima etapa prevista: um Cloudflare Worker gratuito para checar os endereços e avisar pelo mesmo bot com o site fechado.
+
+## Alertas por endereço
+
+A aba Alertas lista cada endereço monitorado com os alertas definidos para ele, e cada alerta pode ser editado, pausado, excluído ou ter o Telegram ligado/desligado. Atalho: botão direito sobre um nó monitorado › 🔔 Ajustar alerta, que abre o formulário já com o endereço escolhido e mostra os alertas existentes daquele endereço para editar. O item fica desativado em contrapartes e expansões, que não disparam alertas.
+
+Um alerta ligado a um endereço considera Entrada/Saída em relação a esse endereço e ignora os demais monitorados. Alertas sem endereço (regras antigas ou "Todos os monitorados") continuam valendo para qualquer monitorado. Se o endereço deixar de ser monitorado, seus alertas aparecem como fora do monitoramento e não disparam. A mensagem do Telegram usa o nome do endereço do alerta.
