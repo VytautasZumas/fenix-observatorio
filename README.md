@@ -14,7 +14,7 @@ Uso: cadastre endereço com checksum válido e início; informe chave TronGrid e
 
 Limites: sem TRX interno, outros tokens, delegação histórica, atribuição automática, conversão para moeda fiduciária, execução com navegador fechado. Grafo exibe até 100 nós, mantendo os demais movimentos na tabela. Janela histórica longa pode consumir muitas consultas e espaço no navegador. Exportação preserva respostas e horários de coleta; hash não autentica a fonte nem estabelece cadeia de custódia por si só.
 
-Etapa 2: coletor agendado, banco remoto, segredo de API no serviço e envio de e-mail pelo servidor para operação contínua.
+Etapa 2: coletor agendado (Cloudflare Worker gratuito) para avisar pelo Telegram com o site fechado.
 
 Validação: `node --check dist/app.js` e `node tests/core.cjs`. As consultas públicas em `/tmp` são fixtures externas de validação, sem dados de usuário. A aparência e o acesso pós-publicação dependem de revisão em navegador.
 
@@ -22,17 +22,13 @@ Posições manuais são mantidas em IndexedDB e no backup. Uma contraparte nos d
 
 Conexões exibem valor e ativo, com totais separados para TRX e USDT em conexões agregadas. Botão Mostrar/Ocultar data e hora persiste a preferência local; em agregados mostra intervalo do primeiro ao último movimento. Clique na linha ou no rótulo abre o movimento mais recente à direita; o seletor permite percorrer os demais da mesma direção/ativo filtrado, sem misturar o fluxo contrário. Recibo, taxas, hash e TronScan permanecem disponíveis.
 
-## Atualização: investigação e e-mail
+## Atualização: investigação
 
 Página inteira usa o viewport do navegador e mantém a inspeção lateral. Voltar ao painel ou Escape retorna. Shift + arraste desenha sempre um retângulo entre o ponto inicial e o atual, independentemente do caminho do mouse, para seleção dos centros dos nós. Shift + clique alterna um nó. Arrastar um selecionado move o grupo. Clique no fundo (sem arrastar) ou Escape limpa a seleção. Clicar em uma conexão também desmarca os nós e abre a transação. Arrastar o fundo apenas move a câmera e preserva a seleção.
 
 Explorador: período no fuso configurado (minuto final inclusivo), direção, ativo independente do filtro do grafo e valores exatos com >, >=, <, <= ou =. Filtros operam sobre os dados coletados, não completam automaticamente histórico pendente.
 
-E-mail: EmailJS REST a partir do navegador, com Service ID, Template ID e Public Key próprios do usuário. Não utiliza chave privada, senha ou domínio próprio. Template: To Email {{to_email}}, Subject {{subject}}, Body {{message}}. Remetente conectado no provedor. Um destinatário por regra; regras anteriores permitem Definir e-mail. Configuração e botão de teste em Configurações. Conta, serviço e template precisam existir; não são criados automaticamente.
-
-O envio ocorre na coleta que detecta novos eventos elegíveis, após persistir a ocorrência. Não é execução 24h: depende de página aberta/ativa, periodicidade, quotas e atraso da fonte/provedor. Regras não enviam sobre carga inicial. Envios são serializados, com intervalo mínimo de 1,1 s. Status accepted significa aceito pelo provedor, não confirmação de entrega. Sem configuração, destinatário, rejeição e resultado incerto têm estados visíveis. Não há repetição automática de resultados incertos. Reenvio explícito pode duplicar. Eventos importados não enviam automaticamente. Configuração usa apenas identificadores públicos; o provedor recebe os dados incluídos no alerta.
-
-Testes de e-mail usam fetch simulado; não comprovam envio real. O usuário precisa enviar um teste com sua conta para validar remetente/template e recebimento. Os limites atuais do plano devem ser conferidos no EmailJS. Resend exige backend para segredo e domínio verificado para envio normal a destinatários arbitrários; não foi integrado nesta etapa.
+O envio ocorre na coleta que detecta novos eventos elegíveis, após persistir a ocorrência. Não é execução 24h: depende de página aberta/ativa, periodicidade e atraso da fonte. Regras não enviam sobre carga inicial. Eventos importados não enviam automaticamente.
 
 ## Organização dos nós selecionados
 
@@ -44,7 +40,7 @@ Nome de referência: ao selecionar qualquer endereço no grafo, o formulário ju
 
 Grafo em primeiro plano, endereços em lateral recolhível, inspeção independente à direita e explorador em gaveta inferior. A gaveta começa recolhida, abre pelo rodapé, redimensiona pelo puxador ou setas do teclado e oferece Ampliar/Restaurar. Abrir, fechar ou redimensionar preserva a câmera, os nós, filtros e rolagem. Preferências de abertura e altura persistem no caso. Selecionar nó ou transação abre a inspeção; Ver movimentos no explorador abre a gaveta com a seleção atual. Novos controles de zoom e estados responsivos para telas menores.
 
-A marca foi atualizada para Fenix Observatório, inclusive nos e-mails e nomes de backup. O domínio e a base IndexedDB foram preservados para manter os casos existentes e a configuração de origem do EmailJS. Arquivos antigos continuam compatíveis.
+A marca foi atualizada para Fenix Observatório, inclusive nos alertas e nomes de backup. O domínio e a base IndexedDB foram preservados para manter os casos existentes. Arquivos antigos continuam compatíveis.
 
 Verificação do layout: HTML com estrutura e IDs verificados, testes funcionais em tests/core.cjs. tests/browser.cjs usa dados sintéticos e intercepta as solicitações externas; a execução de Chromium neste ambiente foi impedida por restrições de sockets. Revisão visual real permanece pendente.
 
@@ -93,6 +89,8 @@ Em Configurações › Alertas pelo Telegram: crie um bot no @BotFather, cole o 
 
 Conteúdo escolhido em Configurações: Mínimo (só o nome da regra), Resumo (padrão: regra, direção, valor, nome ou endereço abreviado do monitorado e data) ou Completo (inclui origem, destino, hash e link do TronScan). Mensagens de bot não têm criptografia ponta a ponta.
 
-Cada regra tem a opção Enviar pelo Telegram (ligada por padrão, também nas regras antigas) e o e-mail passou a ser opcional. Cada ocorrência mostra o estado do Telegram separado do e-mail; resultado incerto não é repetido sozinho e o reenvio manual pede confirmação. O token fica no IndexedDB deste navegador, não entra no backup exportado e um backup importado nunca traz token: a configuração do Telegram do navegador é mantida. Testes usam a Bot API simulada; o envio real precisa ser validado com Enviar teste.
+Cada regra tem a opção Enviar pelo Telegram (ligada por padrão, também nas regras antigas). Cada ocorrência mostra o estado do envio; resultado incerto não é repetido sozinho e o reenvio manual pede confirmação. O token fica no IndexedDB deste navegador, não entra no backup exportado e um backup importado nunca traz token: a configuração do Telegram do navegador é mantida. Testes usam a Bot API simulada; o envio real precisa ser validado com Enviar teste.
+
+O EmailJS foi removido. Casos e backups de versões anteriores continuam abrindo: a configuração do EmailJS, os e-mails das regras e os estados de envio por e-mail são descartados ao carregar.
 
 Próxima etapa prevista: um Cloudflare Worker gratuito para checar os endereços e avisar pelo mesmo bot com o site fechado.
