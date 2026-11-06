@@ -55,11 +55,11 @@ async function run(code){return vm.runInContext(code,context);}
  await run("showConnection(transfer.hash+':trx:0')");
  assert.equal(await run("selection.value"),events[0].hash+':trx:0');
  assert.equal(await run("visibleEvents().length"),3);
- assert.equal(elements.get('#detail').innerHTML.includes('1,50 TRX'),true);
- assert.equal(elements.get('#detail').innerHTML.includes('connectionEvents'),true);
+ assert.equal(elements.get('#eventDetailBody').innerHTML.includes('1,50 TRX'),true);
+ assert.equal(elements.get('#eventDetailBody').innerHTML.includes('connectionEvents'),true);
  await run("$('#connectionEvents').onchange({target:{value:transfer.id}})");
  assert.equal(await run("selection.value"),events[0].id);
- assert.equal(elements.get('#detail').innerHTML.includes('1,00 USDT'),true);
+ assert.equal(elements.get('#eventDetailBody').innerHTML.includes('1,00 USDT'),true);
  assert.equal(await run("visibleEvents().some(e=>e.id===transfer.hash+':log:2')"),false);
  await run("selection=null;setOnGraph([transfer.hash+':log:1',transfer.hash+':trx:0',transfer.hash+':log:2'],false)");
  assert.equal(await run("scene.edges.length"),1);assert.equal(await run("scene.edges[0].groupSize"),1);
