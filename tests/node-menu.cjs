@@ -22,7 +22,7 @@ const fixture={version:1,auto:false,timezone:'America/Sao_Paulo',addresses:[{add
  await node(a).click({modifiers:['Shift']});await node(b).click({modifiers:['Shift']});await page.keyboard.press('Backspace');await settle();
  assert.equal(await page.locator(`[data-node="${a}"],[data-node="${b}"]`).count(),0);await page.locator('#restoreHidden').click();await settle();
  // Typing Backspace inside a field never deletes nodes.
- await node(c).click();await page.locator('#nodeLabelInput').focus();await page.keyboard.press('Backspace');assert.equal(await page.locator(`[data-node="${c}"]`).count(),1);
+ await node(c).click();if(await page.locator('#inspectorToggle').getAttribute('aria-expanded')!=='true')await page.locator('#inspectorToggle').click();await page.locator('#nodeLabelInput').focus();await page.keyboard.press('Backspace');assert.equal(await page.locator(`[data-node="${c}"]`).count(),1);
  // Right-click menu: colour, shape, rename, comment.
  await node(c).click({button:'right'});assert.equal(await page.locator('#nodeMenu').isVisible(),true);
  assert.deepEqual(await page.locator('#nodeMenu > button').allTextContents().then(t=>t.map(x=>x.replace(/Del$/,'').trim())),['🗑 Excluir do gráfico','✎ Renomear','💬 Inserir comentário','➝ Inserir seta customizada','◎ Monitorar']);

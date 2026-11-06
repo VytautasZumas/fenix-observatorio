@@ -92,3 +92,37 @@ dialog{border:1px solid #4a4d4f;background:#1e2022;color:#d6e0ee;border-radius:1
 .explorer table td:nth-child(4){white-space:normal;word-break:break-all;font-size:9px;line-height:1.35;min-width:96px}
 .explorer table td:nth-child(2){white-space:normal;min-width:70px}
 .explorer table th:nth-child(4){white-space:normal}
+
+/* Layout v14: graph left with the transaction panel below it; explorer in the right column (width dragged), inspector as a closed tab above it. */
+#analysisWorkspace.workspace{grid-template-columns:minmax(0,1fr) var(--side-width,440px);grid-template-rows:auto minmax(0,1fr);grid-template-areas:'graph inspect' 'graph explorer'}
+#analysisWorkspace.workspace.event-open{grid-template-rows:auto minmax(0,1fr) var(--event-height,260px);grid-template-areas:'graph inspect' 'graph explorer' 'event explorer'}
+#analysisWorkspace .graph-panel{grid-area:graph;min-height:0}
+#analysisWorkspace .explorer{grid-area:explorer}
+#analysisWorkspace .detail{grid-area:inspect;max-height:48vh;position:static;width:auto;box-shadow:none}
+#analysisWorkspace #explorerBody{display:flex!important}
+#analysisWorkspace #drawerResize,#analysisWorkspace #drawerTools,#analysisWorkspace #drawerArrow{display:none!important}
+#analysisWorkspace #explorerToggle{cursor:default;writing-mode:horizontal-tb}
+#analysisWorkspace .drawer-head{border-bottom:1px solid var(--line);height:auto;flex-direction:row;padding:0 13px}
+#analysisWorkspace.inspector-closed .detail{background:var(--panel)}
+#analysisWorkspace.inspector-closed .detail .panel-head{height:auto;padding:10px 14px;flex-direction:row;justify-content:space-between;border:0}
+#analysisWorkspace.inspector-closed .detail .panel-head h2{display:block;font-size:13px}
+#analysisWorkspace.inspector-closed #inspectorToggle{writing-mode:horizontal-tb;height:auto;padding:5px 8px}
+.side-resize{grid-column:2;grid-row:1 / -1;justify-self:start;width:10px;margin-left:-10px;cursor:ew-resize;z-index:4;touch-action:none;position:relative}
+.side-resize::after{content:'';position:absolute;left:3px;top:50%;width:3px;height:52px;margin-top:-26px;border-radius:4px;background:#4a4d4f}
+.side-resize:hover::after,.side-resize:focus-visible::after{background:#7a9cc6}
+.side-resizing{cursor:ew-resize;user-select:none}.side-resizing #graph,.side-resizing .table-wrap{pointer-events:none}
+#analysisWorkspace .event-detail{grid-area:event;max-height:none;border-top:0;padding:0 16px 14px;overflow:auto;display:block;position:relative}
+#analysisWorkspace .event-detail[hidden]{display:none}
+.event-resize{position:sticky;top:0;height:10px;margin:0 -16px 2px;cursor:ns-resize;touch-action:none;background:var(--panel);z-index:2}
+.event-resize span{position:absolute;left:calc(50% - 26px);top:4px;width:52px;height:3px;border-radius:4px;background:#585b5d}
+.event-resize:hover span,.event-resize:focus-visible span{background:#7a9cc6}
+#analysisWorkspace .event-detail dl{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));column-gap:20px}
+.funding-box{margin-top:10px;border:1px solid var(--line);border-radius:6px;padding:8px 10px}.funding-box summary{cursor:pointer;font-size:11px;color:var(--muted)}.funding-box[open] summary{margin-bottom:6px}
+@media(max-width:760px){
+ #analysisWorkspace.workspace,#analysisWorkspace.workspace.event-open{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(320px,60vh) auto auto minmax(320px,70vh);grid-template-areas:'graph' 'event' 'inspect' 'explorer'}
+ .side-resize{display:none}
+ #analysisWorkspace .event-detail{max-height:50vh}
+}
+#analysisWorkspace .event-detail dl{grid-template-columns:110px minmax(0,1fr) 110px minmax(0,1fr);column-gap:16px;row-gap:6px;align-items:baseline}
+#analysisWorkspace .event-detail dt{margin-top:0}
+@media(max-width:1280px){#analysisWorkspace .event-detail dl{grid-template-columns:100px minmax(0,1fr)}}
